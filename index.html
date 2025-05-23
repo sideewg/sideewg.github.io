@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Space — Maksym Lapa</title>
+<title>ʀᴜsᴛ ᴄʟɪᴘs</title>
 <style>
   :root {
     --bg-dark: #000;
     --text-light: #eee;
-    --text-muted: #aaa;
-    --primary-white: #fff;
   }
   * {
     box-sizing: border-box;
@@ -17,17 +15,13 @@
   body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-variant: small-caps;
     background-color: var(--bg-dark);
     color: var(--text-light);
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-    position: relative;
-    text-align: center;
-    padding: 40px 20px;
+    overflow: hidden;
   }
-  /* Фон со звездами */
+
   .starfield {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -35,6 +29,7 @@
     z-index: 0;
     overflow: hidden;
   }
+
   .star {
     position: absolute;
     background: white;
@@ -44,33 +39,66 @@
     animation-iteration-count: infinite;
     animation-timing-function: linear;
   }
+
   @keyframes twinkleMove {
     0% {opacity: 0.8;}
     50% {opacity: 0.3;}
     100% {opacity: 0.8;}
   }
 
-  h1 {
-    position: relative;
+  /* Intro */
+  .intro {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 10;
-    font-size: 5rem;
-    font-weight: 900;
-    letter-spacing: 8px;
-    margin: 0 0 15px;
+    animation: fadeOut 3s ease 3s forwards;
+  }
+
+  .intro h1 {
+    font-size: 4rem;
+    color: white;
+    opacity: 0;
+    animation: fadeInZoom 2.5s ease forwards;
+  }
+
+  @keyframes fadeInZoom {
+    0% {opacity: 0; transform: scale(0.8);}
+    100% {opacity: 1; transform: scale(1);}
+  }
+
+  @keyframes fadeOut {
+    to {opacity: 0; visibility: hidden;}
+  }
+
+  .main-content {
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    z-index: 1;
+    position: relative;
+    text-align: center;
+    animation: showMain 1s ease forwards;
+    animation-delay: 6s;
+  }
+
+  @keyframes showMain {
+    to {opacity: 1;}
+  }
+
+  .main-content h1 {
+    font-size: 4rem;
+    letter-spacing: 6px;
+    font-weight: bold;
     user-select: none;
-  }
-  p {
-    position: relative;
-    z-index: 10;
-    max-width: 600px;
-    margin: 0 auto;
-    font-size: 1.4rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-  }
-  a {
-    color: var(--primary-white);
-    text-decoration: underline;
   }
 </style>
 </head>
@@ -78,19 +106,23 @@
 
 <div class="starfield" aria-hidden="true"></div>
 
-<h1>Space</h1>
-<p>Cześć! Jestem Maksym Lapa — pasjonat programowania i technologii.<br>
-Zapraszam do kontaktu i współpracy.<br>
-Email: <a href="mailto:maxym@example.com">maxym@example.com</a></p>
+<!-- Интро -->
+<div class="intro">
+  <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
+</div>
+
+<!-- Основной экран -->
+<div class="main-content">
+  <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
+</div>
 
 <script>
-  // Генерация звёзд
   const starfield = document.querySelector('.starfield');
   const starCount = 80;
-  for(let i=0; i<starCount; i++) {
+  for(let i = 0; i < starCount; i++) {
     const star = document.createElement('div');
     star.classList.add('star');
-    const size = Math.random() * 2 + 1; // 1-3 px
+    const size = Math.random() * 2 + 1;
     star.style.width = size + 'px';
     star.style.height = size + 'px';
     star.style.top = (Math.random() * 100) + '%';
