@@ -1,39 +1,98 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Moja Strona</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blog Maksym Lapa</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f0f0f0;
-      margin: 50px;
+    /* Reset i styl podstawowy */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      display: inline-block;
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      width: 100%;
     }
     h1 {
-      color: #333;
+      font-size: 5rem;
+      margin-bottom: 0.2em;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
     }
-    a {
-      color: #007BFF;
+    h2 {
+      font-weight: 300;
+      font-size: 2.2rem;
+      margin-bottom: 1em;
+      color: #dcdcdc;
+    }
+    p {
+      font-size: 1.3rem;
+      line-height: 1.6;
+      color: #e0e0e0;
+      max-width: 700px;
+      margin: 0 auto 2em auto;
+    }
+    .btn {
+      display: inline-block;
+      padding: 15px 35px;
+      font-size: 1.2rem;
+      color: #764ba2;
+      background: white;
+      border-radius: 50px;
       text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 8px 15px rgba(118,75,162,0.3);
+      transition: all 0.3s ease;
+      cursor: pointer;
     }
-    a:hover {
-      text-decoration: underline;
+    .btn:hover {
+      background: #5a3799;
+      color: white;
+      box-shadow: 0 15px 20px rgba(90,55,153,0.6);
+      transform: translateY(-3px);
+    }
+    footer {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.5);
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 3.5rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
+      p {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Witaj na mojej stronie!</h1>
-    <p>To jest prosty przykład strony HTML.</p>
-    <p>Sprawdź mój <a href="https://github.com/">GitHub</a></p>
+  <div class="container">
+    <h1>Maksym Lapa</h1>
+    <h2>Blog pełen pasji i inspiracji</h2>
+    <p>Witaj na moim blogu, gdzie dzielę się przemyśleniami na temat programowania, technologii i życia codziennego. Zapraszam do czytania, komentowania i wspólnego rozwijania pasji!</p>
+    <a href="#" class="btn">Zacznij czytać</a>
   </div>
+  <footer>
+    &copy; 2025 Maksym Lapa
+  </footer>
 </body>
 </html>
