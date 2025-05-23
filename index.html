@@ -10,6 +10,7 @@
     --text-light: #eee;
     --frame-bg: rgba(255, 255, 255, 0.1);
     --frame-border: rgba(255, 255, 255, 0.2);
+    --neon-red: #ff0000;
   }
   * {
     box-sizing: border-box;
@@ -66,6 +67,29 @@
     color: white;
     opacity: 0;
     animation: fadeInZoom 2.5s ease forwards;
+    text-shadow: 
+      0 0 5px var(--neon-red),
+      0 0 10px var(--neon-red),
+      0 0 20px var(--neon-red),
+      0 0 40px var(--neon-red);
+    animation: neonGlow 2s ease-in-out infinite alternate, fadeInZoom 2.5s ease forwards;
+  }
+
+  @keyframes neonGlow {
+    from {
+      text-shadow: 
+        0 0 5px var(--neon-red),
+        0 0 10px var(--neon-red),
+        0 0 20px var(--neon-red),
+        0 0 40px var(--neon-red);
+    }
+    to {
+      text-shadow: 
+        0 0 10px var(--neon-red),
+        0 0 20px var(--neon-red),
+        0 0 30px var(--neon-red),
+        0 0 60px var(--neon-red);
+    }
   }
 
   @keyframes fadeInZoom {
@@ -102,6 +126,12 @@
     font-weight: bold;
     user-select: none;
     margin-bottom: 20px;
+    text-shadow: 
+      0 0 5px var(--neon-red),
+      0 0 10px var(--neon-red),
+      0 0 20px var(--neon-red),
+      0 0 40px var(--neon-red);
+    animation: neonGlow 2s ease-in-out infinite alternate;
   }
 
   .categories {
@@ -120,25 +150,51 @@
     border: 1px solid var(--frame-border);
     backdrop-filter: blur(4px);
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    transition: 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
     cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards;
   }
+
+  .category:nth-child(1) { animation-delay: 6.2s; }
+  .category:nth-child(2) { animation-delay: 6.4s; }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .category:hover {
     background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
   }
+
   .category.active {
     background: rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.4);
   }
 
   .clips-container {
-    display: none;
     max-width: 1200px;
     margin: 0 auto;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
 
   .clips-container.active {
     display: block;
+    opacity: 1;
+  }
+
+  .clips-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
   }
 
   .clip-frame {
@@ -149,7 +205,17 @@
     backdrop-filter: blur(4px);
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
     padding: 20px;
-    transition: transform 0.3s ease;
+    max-width: 600px;
+    opacity: 0;
+    transform: scale(0.95);
+    animation: fadeInScale 0.5s ease forwards;
+  }
+
+  @keyframes fadeInScale {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   .clip-frame:hover {
@@ -159,8 +225,9 @@
   .clip-video {
     flex: 1;
     min-width: 300px;
-    max-width: 600px;
-    height: 300px;
+    max-width: 300px;
+    height: 200px;
+    cursor: pointer;
   }
 
   .clip-video iframe {
@@ -179,26 +246,177 @@
   }
 
   .clip-title {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     margin: 0 0 10px;
     font-weight: bold;
   }
 
   .clip-author {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
     margin-bottom: 10px;
   }
 
   .clip-description {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.7);
     line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .share-button {
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    color: var(--text-light);
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+    align-self: flex-start;
+  }
+
+  .share-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .share-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    padding: 10px 20px;
+    color: var(--text-light);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideIn 0.5s ease forwards, slideOut 0.5s ease 2s forwards;
+    z-index: 30;
+  }
+
+  @keyframes slideIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideOut {
+    to {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    padding: 8px 15px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+
+  .pagination button {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
+  }
+
+  .pagination button:hover:not(:disabled) {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .pagination button:disabled {
+    color: rgba(255, 255, 255, 0.3);
+    cursor: not-allowed;
+  }
+
+  .pagination span {
+    font-size: 0.9rem;
+    color: var(--text-light);
+  }
+
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 20;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 80vh;
+    width: 800px;
+    height: 450px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    overflow: hidden;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+  }
+
+  .modal.active .modal-content {
+    transform: scale(1);
+  }
+
+  .modal-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    color: var(--text-light);
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 
   @media (max-width: 768px) {
     .clip-frame {
       flex-direction: column;
+      max-width: 100%;
     }
     .clip-video {
       max-width: 100%;
@@ -206,6 +424,23 @@
     }
     .clip-info {
       padding: 10px 0;
+    }
+    .modal-content {
+      width: 90%;
+      height: 50vh;
+    }
+    .pagination {
+      padding: 8px 15px;
+    }
+    .pagination button {
+      font-size: 1rem;
+    }
+    .pagination span {
+      font-size: 0.8rem;
+    }
+    .share-button {
+      font-size: 0.8rem;
+      padding: 4px 8px;
     }
   }
 </style>
@@ -223,7 +458,22 @@
 <div class="main-content">
   <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
   <div class="categories" id="categories"></div>
-  <div class="clips-container" id="clips-container"></div>
+  <div class="clips-container" id="clips-container">
+    <div class="clips-list" id="clips-list"></div>
+    <div class="pagination" id="pagination">
+      <button id="prev-page">←</button>
+      <span id="page-indicator"></span>
+      <button id="next-page">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal" id="video-modal">
+  <div class="modal-content">
+    <span class="modal-close">×</span>
+    <iframe src=""></iframe>
+  </div>
 </div>
 
 <script>
@@ -245,38 +495,114 @@
 
   // Categories and clips data
   const categoriesData = {
-    'PVP': [
+    'Клипы': [
       {
         title: 'Epic AK Spray',
         url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         author: 'RustMaster',
-        description: 'An intense AK spray-down in a high-stakes PVP battle.'
+        description: 'Интенсивный бой с использованием АК в напряженном PVP.'
+      },
+      {
+        title: 'Sniper Headshot',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustSniper',
+        description: 'Точный выстрел из снайперской винтовки в голову.'
+      },
+      {
+        title: 'Rocket Raid',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustRaider',
+        description: 'Масштабный рейд с использованием ракет.'
+      },
+      {
+        title: 'Close Quarters',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustFighter',
+        description: 'Напряженный бой в тесном пространстве.'
+      },
+      {
+        title: 'Base Defense',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustDefender',
+        description: 'Успешная защита базы от рейдеров.'
+      },
+      {
+        title: 'Stealth Takedown',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustNinja',
+        description: 'Скрытное устранение противника.'
       }
     ],
-    'Funny Moments': [
+    'Смешные моменты': [
       {
         title: 'Trap Base Fail',
         url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
         author: 'RustTroll',
-        description: 'Hilarious moment when a trap base backfires spectacularly.'
+        description: 'Смешной момент, когда ловушка в базе дала сбой.'
+      },
+      {
+        title: 'Friendly Fire',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustJoker',
+        description: 'Забавный случай, когда союзник попал под дружественный огонь.'
+      },
+      {
+        title: 'Barrel Mishap',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustClown',
+        description: 'Неудачная попытка спрятаться в бочке.'
+      },
+      {
+        title: 'Explosive Fail',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustBoom',
+        description: 'Взрывной промах при попытке рейда.'
+      },
+      {
+        title: 'Door Trap',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustPrank',
+        description: 'Смешная ловушка с дверью.'
+      },
+      {
+        title: 'Animal Chase',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustRunner',
+        description: 'Погоня за игроком со стороны медведя.'
       }
     ]
   };
 
   const categoriesContainer = document.getElementById('categories');
   const clipsContainer = document.getElementById('clips-container');
+  const clipsList = document.getElementById('clips-list');
+  const pagination = document.getElementById('pagination');
+  const prevPage = document.getElementById('prev-page');
+  const nextPage = document.getElementById('next-page');
+  const pageIndicator = document.getElementById('page-indicator');
+  const modal = document.getElementById('video-modal');
+  const modalIframe = modal.querySelector('iframe');
+  const modalClose = modal.querySelector('.modal-close');
+
+  let currentCategory = Object.keys(categoriesData)[0];
+  let currentPage = 0;
+  const clipsPerPage = 3;
 
   // Generate category buttons
   Object.keys(categoriesData).forEach(category => {
     const button = document.createElement('div');
     button.classList.add('category');
     button.textContent = category;
-    button.addEventListener('click', () => showClips(category));
+    button.addEventListener('click', () => {
+      currentCategory = category;
+      currentPage = 0;
+      showClips(category, currentPage);
+    });
     categoriesContainer.appendChild(button);
   });
 
-  // Function to show clips for a selected category
-  function showClips(category) {
+  // Function to show clips for a selected category and page
+  function showClips(category, page) {
     // Update active category
     document.querySelectorAll('.category').forEach(btn => {
       btn.classList.remove('active');
@@ -285,13 +611,20 @@
       }
     });
 
-    // Clear previous clips
-    clipsContainer.innerHTML = '';
+    // Clear and hide clips container
+    clipsContainer.classList.remove('active');
+    clipsList.innerHTML = '';
 
-    // Add new clip
-    categoriesData[category].forEach(clip => {
+    // Calculate clips to show
+    const startIndex = page * clipsPerPage;
+    const endIndex = Math.min(startIndex + clipsPerPage, categoriesData[category].length);
+    const clips = categoriesData[category].slice(startIndex, endIndex);
+
+    // Add clips for current page
+    clips.forEach((clip, index) => {
       const clipElement = document.createElement('div');
       clipElement.classList.add('clip-frame');
+      clipElement.style.animationDelay = `${index * 0.2}s`;
       clipElement.innerHTML = `
         <div class="clip-video">
           <iframe src="${clip.url}" allowfullscreen></iframe>
@@ -300,17 +633,78 @@
           <h2 class="clip-title">${clip.title}</h2>
           <div class="clip-author">Автор: ${clip.author}</div>
           <div class="clip-description">${clip.description}</div>
+          <button class="share-button" data-url="${clip.url}">Поделиться</button>
         </div>
       `;
-      clipsContainer.appendChild(clipElement);
+      clipsList.appendChild(clipElement);
+
+      // Add click event to open modal
+      const iframe = clipElement.querySelector('iframe');
+      iframe.addEventListener('click', () => {
+        modalIframe.src = clip.url;
+        modal.classList.add('active');
+      });
     });
 
-    // Show clips container
-    clipsContainer.classList.add('active');
+    // Update pagination
+    const totalPages = Math.ceil(categoriesData[category].length / clipsPerPage);
+    pageIndicator.textContent = `Страница ${page + 1} из ${totalPages}`;
+    prevPage.disabled = page === 0;
+    nextPage.disabled = page === totalPages - 1;
+
+    // Show clips container with animation
+    requestAnimationFrame(() => {
+      clipsContainer.classList.add('active');
+    });
   }
 
-  // Show first category by default
-  showClips(Object.keys(categoriesData)[0]);
+  // Pagination controls
+  prevPage.addEventListener('click', () => {
+    if (currentPage > 0) {
+      currentPage--;
+      showClips(currentCategory, currentPage);
+    }
+  });
+
+  nextPage.addEventListener('click', () => {
+    if (currentPage < Math.ceil(categoriesData[currentCategory].length / clipsPerPage) - 1) {
+      currentPage++;
+      showClips(currentCategory, currentPage);
+    }
+  });
+
+  // Share button functionality
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('share-button')) {
+      const url = e.target.dataset.url;
+      navigator.clipboard.writeText(url).then(() => {
+        const notification = document.createElement('div');
+        notification.classList.add('share-notification');
+        notification.textContent = 'Ссылка скопирована!';
+        document.body.appendChild(notification);
+        setTimeout(() => {
+          notification.remove();
+        }, 2500);
+      });
+    }
+  });
+
+  // Close modal
+  modalClose.addEventListener('click', () => {
+    modal.classList.remove('active');
+    modalIframe.src = '';
+  });
+
+  // Close modal when clicking outside
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('active');
+      modalIframe.src = '';
+    }
+  });
+
+  // Show first category and page by default
+  showClips(currentCategory, currentPage);
 </script>
 
 </body>
