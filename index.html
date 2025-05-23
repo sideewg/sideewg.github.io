@@ -1,98 +1,227 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blog Maksym Lapa</title>
-  <style>
-    /* Reset i styl podstawowy */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blog Maksym Lapa</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: rgba(0,0,0,0.4);
+    padding: 20px 30px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 2.8rem;
+    cursor: default;
+  }
+  nav {
+    margin-top: 10px;
+  }
+  nav button {
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    padding: 10px 20px;
+    font-size: 1rem;
+    margin: 0 10px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  nav button:hover,
+  nav button.active {
+    background-color: white;
+    color: #764ba2;
+  }
+  main {
+    flex-grow: 1;
+    padding: 30px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .post-list article {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .post-list article:hover {
+    background: rgba(255,255,255,0.2);
+  }
+  .post-list h2 {
+    margin: 0 0 10px 0;
+  }
+  .post-list p {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #ddd;
+  }
+  .post-content {
+    background: rgba(255,255,255,0.1);
+    padding: 25px 30px;
+    border-radius: 12px;
+    line-height: 1.6;
+  }
+  .post-content h2 {
+    margin-top: 0;
+  }
+  .back-button {
+    margin-top: 25px;
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    padding: 10px 25px;
+    font-size: 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  .back-button:hover {
+    background-color: white;
+    color: #764ba2;
+  }
+  footer {
+    text-align: center;
+    padding: 15px 0;
+    background: rgba(0,0,0,0.3);
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  @media (max-width: 600px) {
+    header h1 {
+      font-size: 2rem;
     }
-    html, body {
-      height: 100%;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 20px;
-    }
-    .container {
-      max-width: 900px;
-      width: 100%;
-    }
-    h1 {
-      font-size: 5rem;
-      margin-bottom: 0.2em;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-    }
-    h2 {
-      font-weight: 300;
-      font-size: 2.2rem;
-      margin-bottom: 1em;
-      color: #dcdcdc;
-    }
-    p {
-      font-size: 1.3rem;
-      line-height: 1.6;
-      color: #e0e0e0;
-      max-width: 700px;
-      margin: 0 auto 2em auto;
-    }
-    .btn {
-      display: inline-block;
-      padding: 15px 35px;
-      font-size: 1.2rem;
-      color: #764ba2;
-      background: white;
-      border-radius: 50px;
-      text-decoration: none;
-      font-weight: bold;
-      box-shadow: 0 8px 15px rgba(118,75,162,0.3);
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: #5a3799;
-      color: white;
-      box-shadow: 0 15px 20px rgba(90,55,153,0.6);
-      transform: translateY(-3px);
-    }
-    footer {
-      position: absolute;
-      bottom: 20px;
-      width: 100%;
-      text-align: center;
+    nav button {
+      padding: 8px 15px;
+      margin: 0 5px;
       font-size: 0.9rem;
-      color: rgba(255,255,255,0.5);
     }
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 3.5rem;
-      }
-      h2 {
-        font-size: 1.5rem;
-      }
-      p {
-        font-size: 1rem;
-      }
+    main {
+      padding: 20px 15px;
     }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Maksym Lapa</h1>
-    <h2>Blog pełen pasji i inspiracji</h2>
-    <p>Witaj na moim blogu, gdzie dzielę się przemyśleniami na temat programowania, technologii i życia codziennego. Zapraszam do czytania, komentowania i wspólnego rozwijania pasji!</p>
-    <a href="#" class="btn">Zacznij czytać</a>
-  </div>
-  <footer>
-    &copy; 2025 Maksym Lapa
-  </footer>
+
+<header>
+  <h1>Blog Maksym Lapa</h1>
+  <nav>
+    <button id="nav-home" class="active">Strona główna</button>
+  </nav>
+</header>
+
+<main id="app">
+  <!-- Tutaj będzie zawartość bloga -->
+</main>
+
+<footer>
+  &copy; 2025 Maksym Lapa
+</footer>
+
+<script>
+  const posts = [
+    {
+      id: 1,
+      title: "Witaj na moim blogu!",
+      date: "2025-05-23",
+      content: `
+        <p>To mój pierwszy wpis na blogu. Cieszę się, że tu jesteś!</p>
+        <p>Będę dzielił się tutaj swoimi przemyśleniami o programowaniu, technologiach i życiu.</p>
+      `
+    },
+    {
+      id: 2,
+      title: "Dlaczego warto uczyć się JavaScript?",
+      date: "2025-05-24",
+      content: `
+        <p>JavaScript to język, który króluje na webie. Pozwala tworzyć dynamiczne i interaktywne strony.</p>
+        <p>Warto go znać, bo to jedna z najpopularniejszych umiejętności na rynku pracy.</p>
+      `
+    },
+    {
+      id: 3,
+      title: "Moje ulubione narzędzia programistyczne",
+      date: "2025-05-25",
+      content: `
+        <p>Uwielbiam Visual Studio Code, Git i GitHub — dzięki nim moja praca jest dużo prostsza.</p>
+        <p>A Ty? Jakie masz ulubione narzędzia?</p>
+      `
+    }
+  ];
+
+  const app = document.getElementById('app');
+  const navHomeBtn = document.getElementById('nav-home');
+
+  function renderPostList() {
+    navHomeBtn.classList.add('active');
+    app.innerHTML = `
+      <section class="post-list">
+        ${posts.map(post => `
+          <article data-id="${post.id}">
+            <h2>${post.title}</h2>
+            <small>${post.date}</small>
+            <p>${post.content.substring(0, 100).replace(/<[^>]*>?/gm, '')}...</p>
+          </article>
+        `).join('')}
+      </section>
+    `;
+
+    document.querySelectorAll('.post-list article').forEach(article => {
+      article.addEventListener('click', () => {
+        const id = parseInt(article.getAttribute('data-id'));
+        renderPost(id);
+      });
+    });
+  }
+
+  function renderPost(id) {
+    navHomeBtn.classList.remove('active');
+    const post = posts.find(p => p.id === id);
+    if (!post) {
+      app.innerHTML = `<p>Wpis nie znaleziony.</p>`;
+      return;
+    }
+    app.innerHTML = `
+      <article class="post-content">
+        <h2>${post.title}</h2>
+        <small>${post.date}</small>
+        ${post.content}
+        <button class="back-button">← Powrót</button>
+      </article>
+    `;
+
+    document.querySelector('.back-button').addEventListener('click', () => {
+      renderPostList();
+    });
+  }
+
+  // Na start pokaz listę wpisów
+  renderPostList();
+
+  // Nawigacja
+  navHomeBtn.addEventListener('click', () => {
+    renderPostList();
+  });
+</script>
+
 </body>
 </html>
