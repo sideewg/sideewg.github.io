@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="ru">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,6 +8,8 @@
   :root {
     --bg-dark: #000;
     --text-light: #eee;
+    --frame-bg: rgba(255, 255, 255, 0.1);
+    --frame-border: rgba(255, 255, 255, 0.2);
   }
   * {
     box-sizing: border-box;
@@ -19,7 +21,7 @@
     background-color: var(--bg-dark);
     color: var(--text-light);
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   .starfield {
@@ -46,7 +48,6 @@
     100% {opacity: 0.8;}
   }
 
-  /* Intro */
   .intro {
     position: fixed;
     top: 0; left: 0;
@@ -82,12 +83,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
     z-index: 1;
     position: relative;
     text-align: center;
     animation: showMain 1s ease forwards;
     animation-delay: 6s;
+    padding: 40px 20px;
   }
 
   @keyframes showMain {
@@ -99,6 +101,112 @@
     letter-spacing: 6px;
     font-weight: bold;
     user-select: none;
+    margin-bottom: 20px;
+  }
+
+  .categories {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+  }
+
+  .category {
+    font-size: 1.5rem;
+    background: var(--frame-bg);
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 1px solid var(--frame-border);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    transition: 0.3s ease;
+    cursor: pointer;
+  }
+  .category:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .category.active {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .clips-container {
+    display: none;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .clips-container.active {
+    display: block;
+  }
+
+  .clip-frame {
+    display: flex;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    transition: transform 0.3s ease;
+  }
+
+  .clip-frame:hover {
+    transform: scale(1.02);
+  }
+
+  .clip-video {
+    flex: 1;
+    min-width: 300px;
+    max-width: 600px;
+    height: 300px;
+  }
+
+  .clip-video iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+  }
+
+  .clip-info {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .clip-title {
+    font-size: 1.5rem;
+    margin: 0 0 10px;
+    font-weight: bold;
+  }
+
+  .clip-author {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 10px;
+  }
+
+  .clip-description {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .clip-frame {
+      flex-direction: column;
+    }
+    .clip-video {
+      max-width: 100%;
+      height: 200px;
+    }
+    .clip-info {
+      padding: 10px 0;
+    }
   }
 </style>
 </head>
@@ -111,12 +219,15 @@
   <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
 </div>
 
-<!-- Основной экран -->
+<!-- Основной контент -->
 <div class="main-content">
   <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
+  <div class="categories" id="categories"></div>
+  <div class="clips-container" id="clips-container"></div>
 </div>
 
 <script>
+  // Starfield generation
   const starfield = document.querySelector('.starfield');
   const starCount = 80;
   for(let i = 0; i < starCount; i++) {
@@ -131,6 +242,75 @@
     star.style.animationDelay = (Math.random() * 10) + 's';
     starfield.appendChild(star);
   }
+
+  // Categories and clips data
+  const categoriesData = {
+    'PVP': [
+      {
+        title: 'Epic AK Spray',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustMaster',
+        description: 'An intense AK spray-down in a high-stakes PVP battle.'
+      }
+    ],
+    'Funny Moments': [
+      {
+        title: 'Trap Base Fail',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        author: 'RustTroll',
+        description: 'Hilarious moment when a trap base backfires spectacularly.'
+      }
+    ]
+  };
+
+  const categoriesContainer = document.getElementById('categories');
+  const clipsContainer = document.getElementById('clips-container');
+
+  // Generate category buttons
+  Object.keys(categoriesData).forEach(category => {
+    const button = document.createElement('div');
+    button.classList.add('category');
+    button.textContent = category;
+    button.addEventListener('click', () => showClips(category));
+    categoriesContainer.appendChild(button);
+  });
+
+  // Function to show clips for a selected category
+  function showClips(category) {
+    // Update active category
+    document.querySelectorAll('.category').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.textContent === category) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Clear previous clips
+    clipsContainer.innerHTML = '';
+
+    // Add new clip
+    categoriesData[category].forEach(clip => {
+      const clipElement = document.createElement('div');
+      clipElement.classList.add('clip-frame');
+      clipElement.innerHTML = `
+        <div class="clip-video">
+          <iframe src="${clip.url}" allowfullscreen></iframe>
+        </div>
+        <div class="clip-info">
+          <h2 class="clip-title">${clip.title}</h2>
+          <div class="clip-author">Автор: ${clip.author}</div>
+          <div class="clip-description">${clip.description}</div>
+        </div>
+      `;
+      clipsContainer.appendChild(clipElement);
+    });
+
+    // Show clips container
+    clipsContainer.classList.add('active');
+  }
+
+  // Show first category by default
+  showClips(Object.keys(categoriesData)[0]);
 </script>
 
 </body>
