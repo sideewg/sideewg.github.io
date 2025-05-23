@@ -59,20 +59,19 @@
     justify-content: center;
     align-items: center;
     z-index: 10;
-    animation: fadeOut 3s ease 3s forwards;
+    animation: fadeOut 1.5s ease 1.5s forwards;
   }
 
   .intro h1 {
     font-size: 4rem;
     color: white;
     opacity: 0;
-    animation: fadeInZoom 2.5s ease forwards;
     text-shadow: 
       0 0 5px var(--neon-red),
       0 0 10px var(--neon-red),
       0 0 20px var(--neon-red),
       0 0 40px var(--neon-red);
-    animation: neonGlow 2s ease-in-out infinite alternate, fadeInZoom 2.5s ease forwards;
+    animation: neonGlow 2s ease-in-out infinite alternate, fadeInZoom 1.5s ease forwards;
   }
 
   @keyframes neonGlow {
@@ -101,6 +100,98 @@
     to {opacity: 0; visibility: hidden;}
   }
 
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background: var(--frame-bg);
+    border-right: 1px solid var(--frame-border);
+    backdrop-filter: blur(4px);
+    z-index: 5;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .nav.active {
+    transform: translateX(0);
+  }
+
+  .nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 60px 20px 20px;
+  }
+
+  .nav-item {
+    font-size: 1.2rem;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: 1px solid var(--frame-border);
+    background: var(--frame-bg);
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    animation: fadeInUp 0.5s ease forwards;
+  }
+
+  .nav-item:nth-child(1) { animation-delay: 3s; }
+  .nav-item:nth-child(2) { animation-delay: 3.2s; }
+  .nav-item:nth-child(3) { animation-delay: 3.4s; }
+
+  .nav.active .nav-item {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+
+  .nav-item.active {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .hamburger {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 1.5rem;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 5px 10px;
+    z-index: 6;
+    transition: background 0.3s ease;
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: slideInFromLeft 0.5s ease 2.5s forwards;
+  }
+
+  .hamburger:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  @keyframes slideInFromLeft {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .main-content {
     opacity: 0;
     display: flex;
@@ -111,8 +202,8 @@
     z-index: 1;
     position: relative;
     text-align: center;
-    animation: showMain 1s ease forwards;
-    animation-delay: 6s;
+    animation: showMain 0.5s ease forwards;
+    animation-delay: 2.5s;
     padding: 40px 20px;
   }
 
@@ -132,49 +223,6 @@
       0 0 20px var(--neon-red),
       0 0 40px var(--neon-red);
     animation: neonGlow 2s ease-in-out infinite alternate;
-  }
-
-  .categories {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 40px;
-  }
-
-  .category {
-    font-size: 1.5rem;
-    background: var(--frame-bg);
-    padding: 12px 24px;
-    border-radius: 10px;
-    border: 1px solid var(--frame-border);
-    backdrop-filter: blur(4px);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
-    cursor: pointer;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeInUp 0.5s ease forwards;
-  }
-
-  .category:nth-child(1) { animation-delay: 6.2s; }
-  .category:nth-child(2) { animation-delay: 6.4s; }
-
-  @keyframes fadeInUp {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .category:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
-  }
-
-  .category.active {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.4);
   }
 
   .clips-container {
@@ -414,6 +462,17 @@
   }
 
   @media (max-width: 768px) {
+    .nav {
+      width: 200px;
+    }
+    .nav-item {
+      font-size: 1rem;
+      padding: 6px 12px;
+    }
+    .hamburger {
+      font-size: 1.2rem;
+      padding: 4px 8px;
+    }
     .clip-frame {
       flex-direction: column;
       max-width: 100%;
@@ -454,10 +513,19 @@
   <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
 </div>
 
+<!-- Навигация -->
+<nav class="nav">
+  <div class="nav-items">
+    <div class="nav-item" data-section="home">Главная</div>
+    <div class="nav-item" data-section="Клипы">Клипы</div>
+    <div class="nav-item" data-section="Смешные моменты">Смешные моменты</div>
+  </div>
+</nav>
+<button class="hamburger">☰</button>
+
 <!-- Основной контент -->
 <div class="main-content">
   <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
-  <div class="categories" id="categories"></div>
   <div class="clips-container" id="clips-container">
     <div class="clips-list" id="clips-list"></div>
     <div class="pagination" id="pagination">
@@ -573,7 +641,6 @@
     ]
   };
 
-  const categoriesContainer = document.getElementById('categories');
   const clipsContainer = document.getElementById('clips-container');
   const clipsList = document.getElementById('clips-list');
   const pagination = document.getElementById('pagination');
@@ -582,38 +649,30 @@
   const pageIndicator = document.getElementById('page-indicator');
   const modal = document.getElementById('video-modal');
   const modalIframe = modal.querySelector('iframe');
-  const modalClose = modal.querySelector('.modal-close');
+  const modalClose = document.querySelector('.modal-close');
+  const nav = document.querySelector('.nav');
+  const navItemElements = document.querySelectorAll('.nav-item');
+  const hamburger = document.querySelector('.hamburger');
 
-  let currentCategory = Object.keys(categoriesData)[0];
+  let currentCategory = null;
   let currentPage = 0;
   const clipsPerPage = 3;
 
-  // Generate category buttons
-  Object.keys(categoriesData).forEach(category => {
-    const button = document.createElement('div');
-    button.classList.add('category');
-    button.textContent = category;
-    button.addEventListener('click', () => {
-      currentCategory = category;
-      currentPage = 0;
-      showClips(category, currentPage);
-    });
-    categoriesContainer.appendChild(button);
-  });
-
   // Function to show clips for a selected category and page
   function showClips(category, page) {
-    // Update active category
-    document.querySelectorAll('.category').forEach(btn => {
-      btn.classList.remove('active');
-      if (btn.textContent === category) {
-        btn.classList.add('active');
+    currentCategory = category;
+    // Update active nav item
+    navItemElements.forEach(item => {
+      item.classList.remove('active');
+      if (item.dataset.section === category) {
+        item.classList.add('active');
       }
     });
 
-    // Clear and hide clips container
+    // Clear and show clips container
     clipsContainer.classList.remove('active');
     clipsList.innerHTML = '';
+    clipsContainer.style.display = 'block';
 
     // Calculate clips to show
     const startIndex = page * clipsPerPage;
@@ -658,6 +717,18 @@
     });
   }
 
+  // Function to show home page
+  function showHome() {
+    currentCategory = null;
+    navItemElements.forEach(item => {
+      item.classList.remove('active');
+      if (item.dataset.section === 'home') {
+        item.classList.add('active');
+      }
+    });
+    clipsContainer.style.display = 'none';
+  }
+
   // Pagination controls
   prevPage.addEventListener('click', () => {
     if (currentPage > 0) {
@@ -689,6 +760,25 @@
     }
   });
 
+  // Menu functionality
+  navItemElements.forEach(item => {
+    item.addEventListener('click', () => {
+      const section = item.dataset.section;
+      if (section === 'home') {
+        showHome();
+      } else {
+        currentPage = 0;
+        showClips(section, currentPage);
+      }
+      nav.classList.remove('active');
+    });
+  });
+
+  // Hamburger menu toggle
+  hamburger.addEventListener('click', () => {
+    nav.classList.toggle('active');
+  });
+
   // Close modal
   modalClose.addEventListener('click', () => {
     modal.classList.remove('active');
@@ -703,8 +793,8 @@
     }
   });
 
-  // Show first category and page by default
-  showClips(currentCategory, currentPage);
+  // Show home page by default
+  showHome();
 </script>
 
 </body>
