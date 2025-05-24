@@ -129,6 +129,7 @@
   .nav-item:nth-child(1) { animation-delay: 3s; }
   .nav-item:nth-child(2) { animation-delay: 3.2s; }
   .nav-item:nth-child(3) { animation-delay: 3.4s; }
+  .nav-item:nth-child(4) { animation-delay: 3.6s; }
 
   .nav.active .nav-item {
     opacity: 1;
@@ -469,6 +470,100 @@
     background: rgba(255, 255, 255, 0.2);
   }
 
+  .upload-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 20;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .upload-modal.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .upload-modal-content {
+    position: relative;
+    max-width: 90%;
+    width: 500px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    padding: 20px;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+  }
+
+  .upload-modal.active .upload-modal-content {
+    transform: scale(1);
+  }
+
+  .upload-modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .upload-modal-content label {
+    font-size: 1rem;
+    color: var(--text-light);
+  }
+
+  .upload-modal-content input,
+  .upload-modal-content select,
+  .upload-modal-content textarea {
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    color: var(--text-light);
+    padding: 8px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .upload-modal-content textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .upload-modal-content button {
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    color: var(--text-light);
+    padding: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+  }
+
+  .upload-modal-content button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .upload-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    padding: 10px 20px;
+    color: var(--text-light);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideIn 0.5s ease forwards, slideOut 0.5s ease 2s forwards;
+    z-index: 30;
+  }
+
   @media (max-width: 768px) {
     .nav {
       width: 200px;
@@ -501,6 +596,10 @@
       width: 90%;
       height: 50vh;
     }
+    .upload-modal-content {
+      width: 90%;
+      padding: 15px;
+    }
     .pagination {
       padding: 8px 15px;
     }
@@ -520,7 +619,7 @@
   }
 
   @supports not (backdrop-filter: blur(4px)) {
-    .nav, .clip-frame, .pagination, .hamburger {
+    .nav, .clip-frame, .pagination, .hamburger, .upload-modal-content {
       background: rgba(255, 255, 255, 0.15);
     }
   }
@@ -541,6 +640,7 @@
     <div class="nav-item" data-section="home">Главная</div>
     <div class="nav-item" data-section="Клипы">Клипы</div>
     <div class="nav-item" data-section="Смешные моменты">Смешные моменты</div>
+    <div class="nav-item" data-section="upload">Загрузить клип</div>
   </div>
 </nav>
 <button class="hamburger">
@@ -562,11 +662,34 @@
   </div>
 </div>
 
-<!-- Модальное окно -->
+<!-- Модальное окно для видео -->
 <div class="modal" id="video-modal">
   <div class="modal-content">
     <span class="modal-close">×</span>
     <iframe src=""></iframe>
+  </div>
+</div>
+
+<!-- Модальное окно для загрузки клипа -->
+<div class="upload-modal" id="upload-modal">
+  <div class="upload-modal-content">
+    <span class="modal-close">×</span>
+    <form id="upload-form">
+      <label for="clip-url">YouTube URL *</label>
+      <input type="url" id="clip-url" name="url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID" required>
+      <label for="clip-title">Заголовок *</label>
+      <input type="text" id="clip-title" name="title" placeholder="Эпичный рейд" required>
+      <label for="clip-author">Автор *</label>
+      <input type="text" id="clip-author" name="author" placeholder="RustMaster" required>
+      <label for="clip-description">Описание</label>
+      <textarea id="clip-description" name="description" placeholder="Опишите клип..."></textarea>
+      <label for="clip-category">Категория *</label>
+      <select id="clip-category" name="category" required>
+        <option value="Клипы">Клипы</option>
+        <option value="Смешные моменты">Смешные моменты</option>
+      </select>
+      <button type="submit">Загрузить</button>
+    </form>
   </div>
 </div>
 
@@ -579,9 +702,12 @@
   const prevPage = document.getElementById('prev-page');
   const nextPage = document.getElementById('next-page');
   const pageIndicator = document.getElementById('page-indicator');
-  const modal = document.getElementById('video-modal');
-  const modalIframe = modal.querySelector('iframe');
-  const modalClose = document.querySelector('.modal-close');
+  const videoModal = document.getElementById('video-modal');
+  const modalIframe = videoModal.querySelector('iframe');
+  const videoModalClose = videoModal.querySelector('.modal-close');
+  const uploadModal = document.getElementById('upload-modal');
+  const uploadModalClose = uploadModal.querySelector('.modal-close');
+  const uploadForm = document.getElementById('upload-form');
   const nav = document.querySelector('.nav');
   const navItemElements = document.querySelectorAll('.nav-item');
   const hamburger = document.querySelector('.hamburger');
@@ -601,89 +727,26 @@
     starfield.appendChild(star);
   }
 
-  // Categories and clips data
-  const categoriesData = {
-    'Клипы': [
-      {
-        title: 'Epic AK Spray',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustMaster',
-        description: 'Интенсивный бой с использованием АК в напряженном PVP.'
-      },
-      {
-        title: 'Sniper Headshot',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustSniper',
-        description: 'Точный выстрел из снайперской винтовки в голову.'
-      },
-      {
-        title: 'Rocket Raid',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustRaider',
-        description: 'Масштабный рейд с использованием ракет.'
-      },
-      {
-        title: 'Close Quarters',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustFighter',
-        description: 'Напряженный бой в тесном пространстве.'
-      },
-      {
-        title: 'Base Defense',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustDefender',
-        description: 'Успешная защита базы от рейдеров.'
-      },
-      {
-        title: 'Stealth Takedown',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustNinja',
-        description: 'Скрытное устранение противника.'
-      }
-    ],
-    'Смешные моменты': [
-      {
-        title: 'Trap Base Fail',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustTroll',
-        description: 'Смешной момент, когда ловушка в базе дала сбой.'
-      },
-      {
-        title: 'Friendly Fire',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustJoker',
-        description: 'Забавный случай, когда союзник попал под дружественный огонь.'
-      },
-      {
-        title: 'Barrel Mishap',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustClown',
-        description: 'Неудачная попытка спрятаться в бочке.'
-      },
-      {
-        title: 'Explosive Fail',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustBoom',
-        description: 'Взрывной промах при попытке рейда.'
-      },
-      {
-        title: 'Door Trap',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustPrank',
-        description: 'Смешная ловушка с дверью.'
-      },
-      {
-        title: 'Animal Chase',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        author: 'RustRunner',
-        description: 'Погоня за игроком со стороны медведя.'
-      }
-    ]
-  };
-
+  let categoriesData = {};
   let currentCategory = null;
   let currentPage = 0;
   const clipsPerPage = 3;
+
+  // Load clips from server
+  async function loadClips() {
+    try {
+      const response = await fetch('http://localhost:3000/clips');
+      categoriesData = await response.json();
+    } catch (error) {
+      console.error('Ошибка загрузки клипов:', error);
+    }
+  }
+
+  // Convert YouTube URL to embed format
+  function convertToEmbedUrl(url) {
+    const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+    return videoIdMatch ? `https://www.youtube.com/embed/${videoIdMatch[1]}` : url;
+  }
 
   // Function to show clips for a selected category and page
   function showClips(category, page) {
@@ -735,6 +798,16 @@
       item.classList.toggle('active', item.dataset.section === 'home');
     });
     clipsContainer.style.display = 'none';
+    uploadModal.classList.remove('active');
+  }
+
+  // Function to show upload modal
+  function showUploadModal() {
+    navItemElements.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === 'upload');
+    });
+    uploadModal.classList.add('active');
+    clipsContainer.style.display = 'none';
   }
 
   // Debounce function
@@ -781,12 +854,49 @@
     }
   });
 
+  // Upload form submission
+  uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(uploadForm);
+    const clipData = {
+      url: convertToEmbedUrl(formData.get('url')),
+      title: formData.get('title'),
+      author: formData.get('author'),
+      description: formData.get('description'),
+      category: formData.get('category')
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clipData)
+      });
+      if (response.ok) {
+        await loadClips();
+        uploadModal.classList.remove('active');
+        uploadForm.reset();
+        const notification = document.createElement('div');
+        notification.classList.add('upload-notification');
+        notification.textContent = 'Клип загружен!';
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2500);
+      } else {
+        console.error('Ошибка загрузки клипа');
+      }
+    } catch (error) {
+      console.error('Ошибка сервера:', error);
+    }
+  });
+
   // Menu functionality
   navItemElements.forEach(item => {
     item.addEventListener('click', debounce(() => {
       const section = item.dataset.section;
       if (section === 'home') {
         showHome();
+      } else if (section === 'upload') {
+        showUploadModal();
       } else {
         currentPage = 0;
         showClips(section, currentPage);
@@ -809,22 +919,39 @@
     hamburger.classList.toggle('active');
   });
 
-  // Close modal
-  modalClose.addEventListener('click', () => {
-    modal.classList.remove('active');
+  // Close video modal
+  videoModalClose.addEventListener('click', () => {
+    videoModal.classList.remove('active');
     modalIframe.src = '';
   });
 
-  // Close modal when clicking outside
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.classList.remove('active');
+  // Close video modal when clicking outside
+  videoModal.addEventListener('click', (e) => {
+    if (e.target === videoModal) {
+      videoModal.classList.remove('active');
       modalIframe.src = '';
     }
   });
 
+  // Close upload modal
+  uploadModalClose.addEventListener('click', () => {
+    uploadModal.classList.remove('active');
+    uploadForm.reset();
+  });
+
+  // Close upload modal when clicking outside
+  uploadModal.addEventListener('click', (e) => {
+    if (e.target === uploadModal) {
+      uploadModal.classList.remove('active');
+      uploadForm.reset();
+    }
+  });
+
   // Initialize
-  showHome();
+  (async () => {
+    await loadClips();
+    showHome();
+  })();
 </script>
 
 </body>
