@@ -41,6 +41,7 @@
     animation-name: twinkleMove;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
+    will-change: opacity;
   }
 
   @keyframes twinkleMove {
@@ -66,28 +67,17 @@
     font-size: 4rem;
     color: white;
     opacity: 0;
-    text-shadow: 
-      0 0 5px var(--neon-red),
-      0 0 10px var(--neon-red),
-      0 0 20px var(--neon-red),
-      0 0 40px var(--neon-red);
+    filter: drop-shadow(0 0 5px var(--neon-red)) drop-shadow(0 0 10px var(--neon-red));
     animation: neonGlow 2s ease-in-out infinite alternate, fadeInZoom 1.5s ease forwards;
+    will-change: transform, opacity;
   }
 
   @keyframes neonGlow {
     from {
-      text-shadow: 
-        0 0 5px var(--neon-red),
-        0 0 10px var(--neon-red),
-        0 0 20px var(--neon-red),
-        0 0 40px var(--neon-red);
+      filter: drop-shadow(0 0 5px var(--neon-red)) drop-shadow(0 0 10px var(--neon-red));
     }
     to {
-      text-shadow: 
-        0 0 10px var(--neon-red),
-        0 0 20px var(--neon-red),
-        0 0 30px var(--neon-red),
-        0 0 60px var(--neon-red);
+      filter: drop-shadow(0 0 10px var(--neon-red)) drop-shadow(0 0 20px var(--neon-red));
     }
   }
 
@@ -108,10 +98,10 @@
     height: 100%;
     background: var(--frame-bg);
     border-right: 1px solid var(--frame-border);
-    backdrop-filter: blur(4px);
     z-index: 5;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
+    will-change: transform;
   }
 
   .nav.active {
@@ -160,18 +150,42 @@
     position: fixed;
     top: 10px;
     left: 10px;
-    font-size: 1.5rem;
+    width: 30px;
+    height: 30px;
     background: var(--frame-bg);
     border: 1px solid var(--frame-border);
     border-radius: 5px;
-    color: var(--text-light);
     cursor: pointer;
-    padding: 5px 10px;
+    padding: 0;
     z-index: 6;
-    transition: background 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     opacity: 0;
     transform: translateX(-100%);
     animation: slideInFromLeft 0.5s ease 2.5s forwards;
+    will-change: transform, opacity;
+  }
+
+  .hamburger span {
+    width: 20px;
+    height: 2px;
+    background: var(--text-light);
+    margin: 2px 0;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
   }
 
   .hamburger:hover {
@@ -217,11 +231,7 @@
     font-weight: bold;
     user-select: none;
     margin-bottom: 20px;
-    text-shadow: 
-      0 0 5px var(--neon-red),
-      0 0 10px var(--neon-red),
-      0 0 20px var(--neon-red),
-      0 0 40px var(--neon-red);
+    filter: drop-shadow(0 0 5px var(--neon-red)) drop-shadow(0 0 10px var(--neon-red));
     animation: neonGlow 2s ease-in-out infinite alternate;
   }
 
@@ -250,13 +260,13 @@
     background: var(--frame-bg);
     border: 1px solid var(--frame-border);
     border-radius: 10px;
-    backdrop-filter: blur(4px);
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
     padding: 20px;
     max-width: 600px;
     opacity: 0;
     transform: scale(0.95);
     animation: fadeInScale 0.5s ease forwards;
+    will-change: transform, opacity;
   }
 
   @keyframes fadeInScale {
@@ -367,7 +377,6 @@
     border: 1px solid var(--frame-border);
     border-radius: 10px;
     padding: 8px 15px;
-    backdrop-filter: blur(4px);
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
   }
 
@@ -395,7 +404,6 @@
     color: var(--text-light);
   }
 
-  /* Modal Styles */
   .modal {
     display: none;
     position: fixed;
@@ -470,8 +478,13 @@
       padding: 6px 12px;
     }
     .hamburger {
-      font-size: 1.2rem;
-      padding: 4px 8px;
+      width: 25px;
+      height: 25px;
+    }
+    .hamburger span {
+      width: 16px;
+      height: 1.5px;
+      margin: 1.5px 0;
     }
     .clip-frame {
       flex-direction: column;
@@ -501,6 +514,15 @@
       font-size: 0.8rem;
       padding: 4px 8px;
     }
+    .main-content h1 {
+      font-size: 3rem;
+    }
+  }
+
+  @supports not (backdrop-filter: blur(4px)) {
+    .nav, .clip-frame, .pagination, .hamburger {
+      background: rgba(255, 255, 255, 0.15);
+    }
   }
 </style>
 </head>
@@ -521,7 +543,11 @@
     <div class="nav-item" data-section="Смешные моменты">Смешные моменты</div>
   </div>
 </nav>
-<button class="hamburger">☰</button>
+<button class="hamburger">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
 
 <!-- Основной контент -->
 <div class="main-content">
@@ -545,10 +571,24 @@
 </div>
 
 <script>
-  // Starfield generation
+  // Cache DOM elements
   const starfield = document.querySelector('.starfield');
-  const starCount = 80;
-  for(let i = 0; i < starCount; i++) {
+  const clipsContainer = document.getElementById('clips-container');
+  const clipsList = document.getElementById('clips-list');
+  const pagination = document.getElementById('pagination');
+  const prevPage = document.getElementById('prev-page');
+  const nextPage = document.getElementById('next-page');
+  const pageIndicator = document.getElementById('page-indicator');
+  const modal = document.getElementById('video-modal');
+  const modalIframe = modal.querySelector('iframe');
+  const modalClose = document.querySelector('.modal-close');
+  const nav = document.querySelector('.nav');
+  const navItemElements = document.querySelectorAll('.nav-item');
+  const hamburger = document.querySelector('.hamburger');
+
+  // Starfield generation (50 stars)
+  const starCount = 50;
+  for (let i = 0; i < starCount; i++) {
     const star = document.createElement('div');
     star.classList.add('star');
     const size = Math.random() * 2 + 1;
@@ -641,19 +681,6 @@
     ]
   };
 
-  const clipsContainer = document.getElementById('clips-container');
-  const clipsList = document.getElementById('clips-list');
-  const pagination = document.getElementById('pagination');
-  const prevPage = document.getElementById('prev-page');
-  const nextPage = document.getElementById('next-page');
-  const pageIndicator = document.getElementById('page-indicator');
-  const modal = document.getElementById('video-modal');
-  const modalIframe = modal.querySelector('iframe');
-  const modalClose = document.querySelector('.modal-close');
-  const nav = document.querySelector('.nav');
-  const navItemElements = document.querySelectorAll('.nav-item');
-  const hamburger = document.querySelector('.hamburger');
-
   let currentCategory = null;
   let currentPage = 0;
   const clipsPerPage = 3;
@@ -661,32 +688,26 @@
   // Function to show clips for a selected category and page
   function showClips(category, page) {
     currentCategory = category;
-    // Update active nav item
     navItemElements.forEach(item => {
-      item.classList.remove('active');
-      if (item.dataset.section === category) {
-        item.classList.add('active');
-      }
+      item.classList.toggle('active', item.dataset.section === category);
     });
 
-    // Clear and show clips container
     clipsContainer.classList.remove('active');
     clipsList.innerHTML = '';
     clipsContainer.style.display = 'block';
 
-    // Calculate clips to show
     const startIndex = page * clipsPerPage;
     const endIndex = Math.min(startIndex + clipsPerPage, categoriesData[category].length);
     const clips = categoriesData[category].slice(startIndex, endIndex);
 
-    // Add clips for current page
+    const fragment = document.createDocumentFragment();
     clips.forEach((clip, index) => {
       const clipElement = document.createElement('div');
       clipElement.classList.add('clip-frame');
       clipElement.style.animationDelay = `${index * 0.2}s`;
       clipElement.innerHTML = `
         <div class="clip-video">
-          <iframe src="${clip.url}" allowfullscreen></iframe>
+          <iframe src="${clip.url}" allowfullscreen loading="lazy"></iframe>
         </div>
         <div class="clip-info">
           <h2 class="clip-title">${clip.title}</h2>
@@ -695,38 +716,38 @@
           <button class="share-button" data-url="${clip.url}">Поделиться</button>
         </div>
       `;
-      clipsList.appendChild(clipElement);
-
-      // Add click event to open modal
-      const iframe = clipElement.querySelector('iframe');
-      iframe.addEventListener('click', () => {
-        modalIframe.src = clip.url;
-        modal.classList.add('active');
-      });
+      fragment.appendChild(clipElement);
     });
+    clipsList.appendChild(fragment);
 
-    // Update pagination
     const totalPages = Math.ceil(categoriesData[category].length / clipsPerPage);
     pageIndicator.textContent = `Страница ${page + 1} из ${totalPages}`;
     prevPage.disabled = page === 0;
     nextPage.disabled = page === totalPages - 1;
 
-    // Show clips container with animation
-    requestAnimationFrame(() => {
-      clipsContainer.classList.add('active');
-    });
+    clipsContainer.classList.add('active');
   }
 
   // Function to show home page
   function showHome() {
     currentCategory = null;
     navItemElements.forEach(item => {
-      item.classList.remove('active');
-      if (item.dataset.section === 'home') {
-        item.classList.add('active');
-      }
+      item.classList.toggle('active', item.dataset.section === 'home');
     });
     clipsContainer.style.display = 'none';
+  }
+
+  // Debounce function
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
   }
 
   // Pagination controls
@@ -753,16 +774,16 @@
         notification.classList.add('share-notification');
         notification.textContent = 'Ссылка скопирована!';
         document.body.appendChild(notification);
-        setTimeout(() => {
-          notification.remove();
-        }, 2500);
+        setTimeout(() => notification.remove(), 2500);
+      }).catch(() => {
+        console.error('Ошибка копирования ссылки');
       });
     }
   });
 
   // Menu functionality
   navItemElements.forEach(item => {
-    item.addEventListener('click', () => {
+    item.addEventListener('click', debounce(() => {
       const section = item.dataset.section;
       if (section === 'home') {
         showHome();
@@ -771,12 +792,21 @@
         showClips(section, currentPage);
       }
       nav.classList.remove('active');
-    });
+      hamburger.classList.remove('active');
+    }, 200));
   });
 
   // Hamburger menu toggle
-  hamburger.addEventListener('click', () => {
+  hamburger.addEventListener('click', debounce(() => {
     nav.classList.toggle('active');
+    hamburger.classList.toggle('active');
+  }, 200));
+
+  // Touch support for mobile
+  hamburger.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    nav.classList.toggle('active');
+    hamburger.classList.toggle('active');
   });
 
   // Close modal
@@ -793,7 +823,7 @@
     }
   });
 
-  // Show home page by default
+  // Initialize
   showHome();
 </script>
 
