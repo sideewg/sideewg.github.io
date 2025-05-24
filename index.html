@@ -1,184 +1,914 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-
-const app = express();
-const port = 3000;
-const JWT_SECRET = 'your_jwt_secret'; // Замените на безопасный ключ в продакшене
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// MongoDB connection
-mongoose.connect('mongodb://localhost/rust-clips', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'));
-
-// User schema
-const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' }
-});
-const User = mongoose.model('User', UserSchema);
-
-// Clip schema
-const ClipSchema = new mongoose.Schema({
-  url: { type: String, required: true },
-  title: { type: String, required: true },
-  author: { type: String, required: true },
-  description: String,
-  category: { type: String, required: true }
-});
-const Clip = mongoose.model('Clip', ClipSchema);
-
-// Middleware to verify JWT
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Требуется авторизация' });
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Недействительный токен' });
-    req.user = user;
-    next();
-  });
-}
-
-// Middleware to check admin role
-function isAdmin(req, res, next) {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Доступ только для админов' });
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ʀᴜsᴛ ᴄʟɪᴘs</title>
+<style>
+  :root {
+    --bg-dark: #000;
+    --text-light: #eee;
+    --frame-bg: rgba(255, 255, 255, 0.1);
+    --frame-border: rgba(255, 255, 255, 0.2);
+    --neon-red: #ff0000;
   }
-  next();
-}
-
-// Register user
-app.post('/register', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email и пароль обязательны' });
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-variant: small-caps;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email уже занят' });
+  .starfield {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: black;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation-name: twinkleMove;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    will-change: opacity;
+  }
+
+  @keyframes twinkleMove {
+    0% {opacity: 0.8;}
+    50% {opacity: 0.3;}
+    100% {opacity: 0.8;}
+  }
+
+  .intro {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    animation: fadeOut 1.5s ease 1.5s forwards;
+  }
+
+  .intro h1 {
+    font-size: 4rem;
+    color: white;
+    opacity: 0;
+    filter: drop-shadow(0 0 5px var(--neon-red)) drop-shadow(0 0 10px var(--neon-red));
+    animation: neonGlow 2s ease-in-out infinite alternate, fadeInZoom 1.5s ease forwards;
+    will-change: transform, opacity;
+  }
+
+  @keyframes neonGlow {
+    from {
+      filter: drop-shadow(0 0 5px var(--neon-red)) drop-shadow(0 0 10px var(--neon-red));
     }
+    to {
+      filter: drop-shadow(0 0 10px var(--neon-red)) drop-shadow(0 0 20px var(--neon-red));
+    }
+  }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({
-      email,
-      password: hashedPassword,
-      role: email === 'admin@example.com' ? 'admin' : 'user' // Первый админ
+  @keyframes fadeInZoom {
+    0% {opacity: 0; transform: scale(0.8);}
+    100% {opacity: 1; transform: scale(1);}
+  }
+
+  @keyframes fadeOut {
+    to {opacity: 0; visibility: hidden;}
+  }
+
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background: var(--frame-bg);
+    border-right: 1px solid var(--frame-border);
+    z-index: 5;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    will-change: transform;
+  }
+
+  .nav.active {
+    transform: translateX(0);
+  }
+
+  .nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 60px 20px 20px;
+  }
+
+  .nav-item {
+    font-size: 1.2rem;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: 1px solid var(--frame-border);
+    background: var(--frame-bg);
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    animation: fadeInUp 0.5s ease forwards;
+  }
+
+  .nav-item:nth-child(1) { animation-delay: 3s; }
+  .nav-item:nth-child(2) { animation-delay: 3.2s; }
+  .nav-item:nth-child(3) { animation-delay: 3.4s; }
+  .nav-item:nth-child(4) { animation-delay: 3.6s; }
+
+  .nav.active .nav-item {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+
+  .nav-item.active {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .hamburger {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 30px;
+    height: 30px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: slideInFromLeft 0.5s ease 2.5s forwards;
+    will-change: transform, opacity;
+  }
+
+  .hamburger span {
+    width: 20px;
+    height: 2px;
+    background: var(--text-light);
+    margin: 2px 0;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  .hamburger:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  @keyframes slideInFromLeft {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .main-content {
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    z-index: 1;
+    position: relative;
+    text-align: center;
+    animation: showMain 0.5s ease forwards;
+    animation-delay: 2.5s;
+    padding: 40px 20px;
+  }
+
+  @keyframes showMain {
+    to {opacity: 1;}
+  }
+
+  .main-content h1 {
+    font-size: 4rem;
+    letter-spacing: 6px;
+    font-weight: bold;
+    user-select: none;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 5px var(--neon-red)) drop-shadow(0 0 10px var(--neon-red));
+    animation: neonGlow 2s ease-in-out infinite alternate;
+  }
+
+  .clips-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .clips-container.active {
+    display: block;
+    opacity: 1;
+  }
+
+  .clips-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .clip-frame {
+    display: flex;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    max-width: 600px;
+    opacity: 0;
+    transform: scale(0.95);
+    animation: fadeInScale 0.5s ease forwards;
+    will-change: transform, opacity;
+  }
+
+  @keyframes fadeInScale {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .clip-frame:hover {
+    transform: scale(1.02);
+  }
+
+  .clip-video {
+    flex: 1;
+    min-width: 300px;
+    max-width: 300px;
+    height: 200px;
+    cursor: pointer;
+  }
+
+  .clip-video iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+  }
+
+  .clip-info {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .clip-title {
+    font-size: 1.2rem;
+    margin: 0 0 10px;
+    font-weight: bold;
+  }
+
+  .clip-author {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 10px;
+  }
+
+  .clip-description {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .share-button {
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    color: var(--text-light);
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+    align-self: flex-start;
+  }
+
+  .share-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .share-notification, .upload-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    padding: 10px 20px;
+    color: var(--text-light);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideIn 0.5s ease forwards, slideOut 0.5s ease 2s forwards;
+    z-index: 30;
+  }
+
+  @keyframes slideIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideOut {
+    to {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    padding: 8px 15px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+
+  .pagination button {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
+  }
+
+  .pagination button:hover:not(:disabled) {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .pagination button:disabled {
+    color: rgba(255, 255, 255, 0.3);
+    cursor: not-allowed;
+  }
+
+  .pagination span {
+    font-size: 0.9rem;
+    color: var(--text-light);
+  }
+
+  .modal, .upload-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 20;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal.active, .upload-modal.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .modal-content, .upload-modal-content {
+    position: relative;
+    max-width: 90%;
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 10px;
+    padding: 20px;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+  }
+
+  .modal.active .modal-content, .upload-modal.active .upload-modal-content {
+    transform: scale(1);
+  }
+
+  .modal-content {
+    width: 800px;
+    height: 450px;
+    overflow: hidden;
+  }
+
+  .modal-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .upload-modal-content {
+    width: 500px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    color: var(--text-light);
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .upload-modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .upload-modal-content label {
+    font-size: 1rem;
+    color: var(--text-light);
+  }
+
+  .upload-modal-content input,
+  .upload-modal-content select,
+  .upload-modal-content textarea {
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    color: var(--text-light);
+    padding: 8px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .upload-modal-content textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .upload-modal-content button {
+    background: var(--frame-bg);
+    border: 1px solid var(--frame-border);
+    border-radius: 5px;
+    color: var(--text-light);
+    padding: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+  }
+
+  .upload-modal-content button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    .nav {
+      width: 200px;
+    }
+    .nav-item {
+      font-size: 1rem;
+      padding: 6px 12px;
+    }
+    .hamburger {
+      width: 25px;
+      height: 25px;
+    }
+    .hamburger span {
+      width: 16px;
+      height: 1.5px;
+      margin: 1.5px 0;
+    }
+    .clip-frame {
+      flex-direction: column;
+      max-width: 100%;
+    }
+    .clip-video {
+      max-width: 100%;
+      height: 200px;
+    }
+    .clip-info {
+      padding: 10px 0;
+    }
+    .modal-content {
+      width: 90%;
+      height: 50vh;
+    }
+    .upload-modal-content {
+      width: 90%;
+      padding: 15px;
+    }
+    .pagination {
+      padding: 8px 15px;
+    }
+    .pagination button {
+      font-size: 1rem;
+    }
+    .pagination span {
+      font-size: 0.8rem;
+    }
+    .share-button {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+    }
+    .main-content h1 {
+      font-size: 3rem;
+    }
+  }
+
+  @supports not (backdrop-filter: blur(4px)) {
+    .nav, .clip-frame, .pagination, .hamburger, .upload-modal-content {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="starfield" aria-hidden="true"></div>
+
+<!-- Интро -->
+<div class="intro">
+  <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
+</div>
+
+<!-- Навигация -->
+<nav class="nav">
+  <div class="nav-items">
+    <div class="nav-item" data-section="home">Главная</div>
+    <div class="nav-item" data-section="Клипы">Клипы</div>
+    <div class="nav-item" data-section="Смешные моменты">Смешные моменты</div>
+    <div class="nav-item" data-section="upload">Загрузить клип</div>
+  </div>
+</nav>
+<button class="hamburger">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<!-- Основной контент -->
+<div class="main-content">
+  <h1>ʀᴜsᴛ ᴄʟɪᴘs</h1>
+  <div class="clips-container" id="clips-container">
+    <div class="clips-list" id="clips-list"></div>
+    <div class="pagination" id="pagination">
+      <button id="prev-page">←</button>
+      <span id="page-indicator"></span>
+      <button id="next-page">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно для видео -->
+<div class="modal" id="video-modal">
+  <div class="modal-content">
+    <span class="modal-close">×</span>
+    <iframe src=""></iframe>
+  </div>
+</div>
+
+<!-- Модальное окно для загрузки клипа -->
+<div class="upload-modal" id="upload-modal">
+  <div class="upload-modal-content">
+    <span class="modal-close">×</span>
+    <form id="upload-form">
+      <label for="clip-url">YouTube URL *</label>
+      <input type="url" id="clip-url" name="url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID" required>
+      <label for="clip-title">Заголовок *</label>
+      <input type="text" id="clip-title" name="title" placeholder="Эпичный рейд" required>
+      <label for="clip-author">Автор *</label>
+      <input type="text" id="clip-author" name="author" placeholder="RustMaster" required>
+      <label for="clip-description">Описание</label>
+      <textarea id="clip-description" name="description" placeholder="Опишите клип..."></textarea>
+      <label for="clip-category">Категория *</label>
+      <select id="clip-category" name="category" required>
+        <option value="Клипы">Клипы</option>
+        <option value="Смешные моменты">Смешные моменты</option>
+      </select>
+      <button type="submit">Загрузить</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Cache DOM elements
+  const starfield = document.querySelector('.starfield');
+  const clipsContainer = document.getElementById('clips-container');
+  const clipsList = document.getElementById('clips-list');
+  const pagination = document.getElementById('pagination');
+  const prevPage = document.getElementById('prev-page');
+  const nextPage = document.getElementById('next-page');
+  const pageIndicator = document.getElementById('page-indicator');
+  const videoModal = document.getElementById('video-modal');
+  const modalIframe = videoModal.querySelector('iframe');
+  const videoModalClose = videoModal.querySelector('.modal-close');
+  const uploadModal = document.getElementById('upload-modal');
+  const uploadModalClose = uploadModal.querySelector('.modal-close');
+  const uploadForm = document.getElementById('upload-form');
+  const nav = document.querySelector('.nav');
+  const navItemElements = document.querySelectorAll('.nav-item');
+  const hamburger = document.querySelector('.hamburger');
+
+  // Starfield generation (50 stars)
+  const starCount = 50;
+  for (let i = 0; i < starCount; i++) {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    const size = Math.random() * 2 + 1;
+    star.style.width = size + 'px';
+    star.style.height = size + 'px';
+    star.style.top = (Math.random() * 100) + '%';
+    star.style.left = (Math.random() * 100) + '%';
+    star.style.animationDuration = (Math.random() * 5 + 5) + 's';
+    star.style.animationDelay = (Math.random() * 10) + 's';
+    starfield.appendChild(star);
+  }
+
+  let categoriesData = {};
+  let currentCategory = null;
+  let currentPage = 0;
+  const clipsPerPage = 3;
+
+  // Load clips from server
+  async function loadClips() {
+    try {
+      const response = await fetch('http://localhost:3000/clips');
+      categoriesData = await response.json();
+    } catch (error) {
+      console.error('Ошибка загрузки клипов:', error);
+    }
+  }
+
+  // Convert YouTube URL to embed format
+  function convertToEmbedUrl(url) {
+    const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+    return videoIdMatch ? `https://www.youtube.com/embed/${videoIdMatch[1]}` : url;
+  }
+
+  // Function to show clips for a selected category and page
+  function showClips(category, page) {
+    currentCategory = category;
+    navItemElements.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === category);
     });
-    await user.save();
 
-    const token = jwt.sign({ email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, user: { email: user.email, role: user.role } });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка сервера' });
+    clipsContainer.classList.remove('active');
+    clipsList.innerHTML = '';
+    clipsContainer.style.display = 'block';
+
+    const startIndex = page * clipsPerPage;
+    const endIndex = Math.min(startIndex + clipsPerPage, categoriesData[category].length);
+    const clips = categoriesData[category].slice(startIndex, endIndex);
+
+    const fragment = document.createDocumentFragment();
+    clips.forEach((clip, index) => {
+      const clipElement = document.createElement('div');
+      clipElement.classList.add('clip-frame');
+      clipElement.style.animationDelay = `${index * 0.2}s`;
+      clipElement.innerHTML = `
+        <div class="clip-video">
+          <iframe src="${clip.url}" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="clip-info">
+          <h2 class="clip-title">${clip.title}</h2>
+          <div class="clip-author">Автор: ${clip.author}</div>
+          <div class="clip-description">${clip.description}</div>
+          <button class="share-button" data-url="${clip.url}">Поделиться</button>
+        </div>
+      `;
+      fragment.appendChild(clipElement);
+    });
+    clipsList.appendChild(fragment);
+
+    const totalPages = Math.ceil(categoriesData[category].length / clipsPerPage);
+    pageIndicator.textContent = `Страница ${page + 1} из ${totalPages}`;
+    prevPage.disabled = page === 0;
+    nextPage.disabled = page === totalPages - 1;
+
+    clipsContainer.classList.add('active');
   }
-});
 
-// Login user
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email и пароль обязательны' });
+  // Function to show home page
+  function showHome() {
+    currentCategory = null;
+    navItemElements.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === 'home');
+    });
+    clipsContainer.style.display = 'none';
+    uploadModal.classList.remove('active');
   }
 
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ error: 'Неверный email или пароль' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Неверный email или пароль' });
-    }
-
-    const token = jwt.sign({ email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, user: { email: user.email, role: user.role } });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка сервера' });
+  // Function to show upload modal
+  function showUploadModal() {
+    navItemElements.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === 'upload');
+    });
+    uploadModal.classList.add('active');
+    clipsContainer.style.display = 'none';
   }
-});
 
-// Get all clips
-app.get('/clips', async (req, res) => {
-  try {
-    const clips = await Clip.find();
-    const categories = {
-      'Клипы': [],
-      'Смешные моменты': []
+  // Debounce function
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
     };
-    clips.forEach(clip => {
-      categories[clip.category].push(clip);
-    });
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка чтения клипов' });
-  }
-});
-
-// Upload a new clip
-app.post('/upload', authenticateToken, isAdmin, async (req, res) => {
-  const { url, title, author, description, category } = req.body;
-  if (!url || !title || !author || !category) {
-    return res.status(400).json({ error: 'Заполните обязательные поля' });
   }
 
-  try {
-    const clip = new Clip({ url, title, author, description, category });
-    await clip.save();
-    res.status(200).json({ message: 'Клип загружен' });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка сохранения клипа' });
-  }
-});
+  // Pagination controls
+  prevPage.addEventListener('click', () => {
+    if (currentPage > 0) {
+      currentPage--;
+      showClips(currentCategory, currentPage);
+    }
+  });
 
-// Get all users (admin only)
-app.get('/users', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const users = await User.find().select('email role');
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка чтения пользователей' });
-  }
-});
+  nextPage.addEventListener('click', () => {
+    if (currentPage < Math.ceil(categoriesData[currentCategory].length / clipsPerPage) - 1) {
+      currentPage++;
+      showClips(currentCategory, currentPage);
+    }
+  });
 
-// Update user role (admin only)
-app.patch('/users/:id', authenticateToken, isAdmin, async (req, res) => {
-  const { role } = req.body;
-  if (!['user', 'admin'].includes(role)) {
-    return res.status(400).json({ error: 'Недопустимая роль' });
-  }
+  // Share button functionality
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('share-button')) {
+      const url = e.target.dataset.url;
+      navigator.clipboard.writeText(url).then(() => {
+        const notification = document.createElement('div');
+        notification.classList.add('share-notification');
+        notification.textContent = 'Ссылка скопирована!';
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2500);
+      }).catch(() => {
+        console.error('Ошибка копирования ссылки');
+      });
+    }
+  });
 
-  try {
-    await User.findByIdAndUpdate(req.params.id, { role });
-    res.status(200).json({ message: 'Роль обновлена' });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка обновления роли' });
-  }
-});
+  // Upload form submission
+  uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(uploadForm);
+    const clipData = {
+      url: convertToEmbedUrl(formData.get('url')),
+      title: formData.get('title'),
+      author: formData.get('author'),
+      description: formData.get('description'),
+      category: formData.get('category')
+    };
 
-// Delete user (admin only)
-app.delete('/users/:id', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Пользователь удален' });
-  } catch (error) {
-    res.status(500).json({ error: 'Ошибка удаления пользователя' });
-  }
-});
+    try {
+      const response = await fetch('http://localhost:3000/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clipData)
+      });
+      if (response.ok) {
+        await loadClips();
+        uploadModal.classList.remove('active');
+        uploadForm.reset();
+        const notification = document.createElement('div');
+        notification.classList.add('upload-notification');
+        notification.textContent = 'Клип загружен!';
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2500);
+      } else {
+        console.error('Ошибка загрузки клипа');
+      }
+    } catch (error) {
+      console.error('Ошибка сервера:', error);
+    }
+  });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Сервер запущен на http://localhost:${port}`);
-});
+  // Menu functionality
+  navItemElements.forEach(item => {
+    item.addEventListener('click', debounce(() => {
+      const section = item.dataset.section;
+      if (section === 'home') {
+        showHome();
+      } else if (section === 'upload') {
+        showUploadModal();
+      } else {
+        currentPage = 0;
+        showClips(section, currentPage);
+      }
+      nav.classList.remove('active');
+      hamburger.classList.remove('active');
+    }, 200));
+  });
+
+  // Hamburger menu toggle
+  hamburger.addEventListener('click', debounce(() => {
+    nav.classList.toggle('active');
+    hamburger.classList.toggle('active');
+  }, 200));
+
+  // Touch support for mobile
+  hamburger.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    nav.classList.toggle('active');
+    hamburger.classList.toggle('active');
+  });
+
+  // Close video modal
+  videoModalClose.addEventListener('click', () => {
+    videoModal.classList.remove('active');
+    modalIframe.src = '';
+  });
+
+  // Close video modal when clicking outside
+  videoModal.addEventListener('click', (e) => {
+    if (e.target === videoModal) {
+      videoModal.classList.remove('active');
+      modalIframe.src = '';
+    }
+  });
+
+  // Close upload modal
+  uploadModalClose.addEventListener('click', () => {
+    uploadModal.classList.remove('active');
+    uploadForm.reset();
+  });
+
+  // Close upload modal when clicking outside
+  uploadModal.addEventListener('click', (e) => {
+    if (e.target === uploadModal) {
+      uploadModal.classList.remove('active');
+      uploadForm.reset();
+    }
+  });
+
+  // Initialize
+  (async () => {
+    await loadClips();
+    showHome();
+  })();
+</script>
+
+</body>
+</html>
